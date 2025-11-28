@@ -5,7 +5,7 @@
 #include "BFL_GridHelpers.generated.h"
 
 UCLASS()
-class WISPSCPP_API UBFL_GridHelpers : public UBlueprintFunctionLibrary
+class WISPPLUGIN_API UBFL_GridHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

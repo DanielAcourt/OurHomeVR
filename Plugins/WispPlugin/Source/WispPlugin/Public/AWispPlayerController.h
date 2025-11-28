@@ -8,7 +8,7 @@ class UInteractionComponent;
 class UUserWidget;
 
 UCLASS()
-class WISPSCPP_API AWispPlayerController : public APlayerController
+class WISPPLUGIN_API AWispPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 

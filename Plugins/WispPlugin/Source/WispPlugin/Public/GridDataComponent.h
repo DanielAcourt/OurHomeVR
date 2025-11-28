@@ -8,7 +8,7 @@
 #include "GridDataComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class WISPSCPP_API UGridDataComponent : public UActorComponent
+class WISPPLUGIN_API UGridDataComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

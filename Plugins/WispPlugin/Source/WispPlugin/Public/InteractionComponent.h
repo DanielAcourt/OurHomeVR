@@ -5,7 +5,7 @@
 #include "InteractionComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class WISPSCPP_API UInteractionComponent : public UActorComponent
+class WISPPLUGIN_API UInteractionComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

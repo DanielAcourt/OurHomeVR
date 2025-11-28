@@ -16,7 +16,7 @@ class FJsonObject;
 
 
 UCLASS()
-class WISPSCPP_API UBFL_Json : public UBlueprintFunctionLibrary
+class WISPPLUGIN_API UBFL_Json : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

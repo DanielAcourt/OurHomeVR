@@ -14,7 +14,7 @@ class UAssetImportTask;
 class UFactory;
 
 UCLASS()
-class WISPSCPP_API UFileImportLibrary : public UBlueprintFunctionLibrary
+class WISPPLUGIN_API UFileImportLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

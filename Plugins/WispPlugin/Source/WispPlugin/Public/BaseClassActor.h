@@ -20,7 +20,7 @@ class UQiComponent;
 
 
 UCLASS()
-class WISPSCPP_API ABaseClassActor : public AActor
+class WISPPLUGIN_API ABaseClassActor : public AActor
 {
 	GENERATED_BODY()
 	

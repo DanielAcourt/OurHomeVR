@@ -13,7 +13,7 @@ class UQiComponent;
 
 
 UCLASS()
-class WISPSCPP_API ABaseClassCharacter : public ACharacter
+class WISPPLUGIN_API ABaseClassCharacter : public ACharacter
 {
 
 	GENERATED_BODY()

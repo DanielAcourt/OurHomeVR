@@ -10,7 +10,7 @@
  * 
  */
 UCLASS()
-class WISPSCPP_API UImportExportDataTable : public UBlueprintFunctionLibrary
+class WISPPLUGIN_API UImportExportDataTable : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

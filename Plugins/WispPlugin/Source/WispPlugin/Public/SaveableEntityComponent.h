@@ -7,7 +7,7 @@
 #include "SaveableEntityComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class WISPSCPP_API USaveableEntityComponent : public UActorComponent
+class WISPPLUGIN_API USaveableEntityComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

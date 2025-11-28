@@ -5,7 +5,7 @@
 #include "WispPawn.generated.h"
 
 UCLASS()
-class WISPSCPP_API AWispPawn : public ADefaultPawn
+class WISPPLUGIN_API AWispPawn : public ADefaultPawn
 {
 	GENERATED_BODY()
 

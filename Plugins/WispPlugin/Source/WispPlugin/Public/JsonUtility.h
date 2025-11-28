@@ -7,9 +7,9 @@
 /**
  * 
  */
-class WISPSCPP_API JsonUltility
+class WISPPLUGIN_API JsonUtility
 {
 public:
-	JsonUltility();
-	~JsonUltility();
+	JsonUtility();
+	~JsonUtility();
 };

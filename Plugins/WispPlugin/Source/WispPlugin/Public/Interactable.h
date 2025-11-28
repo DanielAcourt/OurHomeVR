@@ -14,7 +14,7 @@ class UInteractable : public UInterface
 /**
  * The Interface that any interactable actor in the world must implement.
  */
-class WISPSCPP_API IInteractable
+class WISPPLUGIN_API IInteractable
 {
 	GENERATED_BODY()
 

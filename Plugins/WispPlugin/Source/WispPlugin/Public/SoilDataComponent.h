@@ -9,7 +9,7 @@
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class WISPSCPP_API USoilDataComponent : public UActorComponent
+class WISPPLUGIN_API USoilDataComponent : public UActorComponent
 {
 
 	GENERATED_BODY()

@@ -1,0 +1,8 @@
+{
+  "protocol_id": "L0_SELF_TEST",
+  "bit_sequence": "1, 1, 0, 0",
+  "root_of_trust": "ESTABLISHED",
+  "unit_status": "NEW_UNIT_INITIALIZING",
+  "evidence_mandate": "GENERATION_MANDATED",
+  "security_status": "NOMINAL"
+}

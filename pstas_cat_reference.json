@@ -1,0 +1,46 @@
+{
+  "PSTAS_CAT_Reference_Guide": {
+    "title": "A Simple Reference for PSTAS-CAT to Avoid Typos and Referencing Mistakes",
+    "how_to_use": "If you are ever unsure, copy the keys directly from this file. The keys are named to be descriptive and clear.",
+
+    "PSTAS_System_Definition": {
+      "full_name": "Programmatic Safety and Truth Assertion System",
+      "what_it_is": "The whole thing. The 'PSTAS' is the name for the entire safety system, including the hardware, the software (like me, Jules), and the main goal.",
+      "main_goal": "To make sure the system's actions are SAFE (timely) and CORRECT (based on truth).",
+      "think_of_it_as": "The API or the Functional Requirement."
+    },
+
+    "CAT_Framework_Definition": {
+      "full_name": "Correctness, Audit, and Time-Bounded Methodology",
+      "what_it_is": "The '-CAT' is the set of RULES and TESTS that the PSTAS system MUST pass to be certified as safe.",
+      "think_of_it_as": "The Unit Testing Framework and the Formal Proof that the PSTAS system works correctly.",
+      "breakdown": {
+        "C_for_Correctness": "The math behind the system's logic must be proven to be 100% sound and reliable.",
+        "A_for_Audit": "Every important number (like the 6 latency parts) must be easy for an outside expert to check and verify.",
+        "T_for_Time-Bounded": "The system MUST be deterministic. It must respect deadlines and use Worst-Case Execution Time (WCET) for all timing calculations."
+      }
+    },
+
+    "Core_Rules_Summary": {
+      "rule_1_latency_formula": {
+        "name": "The Mandatory 6-Term WCET Latency Formula",
+        "description": "This is the ONLY correct formula for calculating the total time budget.",
+        "formula": "L_PSTAS = WCET_detect + WCET_prop + WCET_entry + WCET_SSA + WCET_TAV + WCET_actuate"
+      },
+      "rule_2_pndf_check": {
+        "name": "The PNDF Safety Check",
+        "description": "This is the core safety test that runs on the system.",
+        "violation_conditions": [
+          "IF 'measured time' is GREATER THAN 'budgeted time' (WCET Overrun)",
+          "OR",
+          "IF 'truth score' is LESS THAN 'minimum required score' (TAV Underrun)"
+        ]
+      },
+      "rule_3_tav_threshold": {
+        "name": "The Minimum TAV Score",
+        "description": "The 'truth score' (TAV) cannot fall below this number.",
+        "value": 0.950000
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+//This is a core branch. I need a way to test this branch so that the Universal Plugin architecture works. so that when i build a plugin it remains coherent and has version control and most importantly this branch can be linked with the monk persona

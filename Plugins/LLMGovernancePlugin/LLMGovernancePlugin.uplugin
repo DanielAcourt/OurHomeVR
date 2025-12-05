@@ -1,0 +1,24 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "LLM Governance Plugin",
+  "Description": "A plugin to govern LLM-assisted development.",
+  "Category": "Development",
+  "CreatedBy": "Jules",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": false,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "LLMGovernancePlugin",
+      "Type": "Developer",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

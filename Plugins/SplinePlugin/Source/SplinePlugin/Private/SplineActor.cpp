@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+#include "SplinePlugin.h"
 #include "SplineActor.h"
 #include "Components/SplineComponent.h"
 

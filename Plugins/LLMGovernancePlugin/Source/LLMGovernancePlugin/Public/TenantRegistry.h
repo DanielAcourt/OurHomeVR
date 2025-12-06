@@ -9,7 +9,12 @@
 struct FTenant;
 
 /**
- * A registry to handle the storage, lookup, and validation of tenants.
+ * @class UTenantRegistry
+ * @brief A registry to handle the storage, lookup, and validation of tenants.
+ *
+ * The UTenantRegistry is responsible for managing the lifecycle of tenants within the governance framework. It
+ * provides a centralized location for storing, retrieving, and validating tenants, ensuring that the system has a
+ * consistent and up-to-date view of all governance rules.
  */
 UCLASS()
 class LLMGOVERNANCEPLUGIN_API UTenantRegistry : public UObject
@@ -18,20 +23,26 @@ class LLMGOVERNANCEPLUGIN_API UTenantRegistry : public UObject
 
 public:
     /**
-     * Adds a new tenant to the registry.
-     * @param Tenant The tenant to add.
+     * @brief Adds a new tenant to the registry.
+     *
+     * This method adds a new tenant to the internal storage, making it available for lookup and validation.
+     *
+     * @param Tenant The FTenant instance to add.
      */
     void AddTenant(const FTenant& Tenant);
 
     /**
-     * Retrieves a tenant from the registry by its ID.
+     * @brief Retrieves a tenant from the registry by its ID.
+     *
+     * This method allows for the retrieval of a specific tenant by its unique identifier.
+     *
      * @param TenantID The ID of the tenant to retrieve.
-     * @return A const pointer to the tenant if found, otherwise nullptr.
+     * @return A const pointer to the FTenant instance if found, otherwise nullptr.
      */
     const FTenant* GetTenant(const FString& TenantID) const;
 
 private:
-    // TMap to store tenants, indexed by their ID.
+    /** @brief TMap to store tenants, indexed by their ID for efficient lookup. */
     UPROPERTY()
     TMap<FString, FTenant> TenantMap;
 };

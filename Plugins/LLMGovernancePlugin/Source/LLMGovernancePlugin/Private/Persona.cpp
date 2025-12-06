@@ -28,8 +28,9 @@ void UPersona::logTenantAddition(const FTenant& Tenant)
 {
     // Log the tenant information in a structured, deterministic format.
     // This adheres to T001 (Deterministic Merge Engine Rules).
-    UE_LOG(LogPersona, Log, TEXT("[Tenant Added] ID: %s, Title: \"%s\", Timestamp: %s"),
+    UE_LOG(LogPersona, Log, TEXT("[Tenant Added] ID: %s, Title: \"%s\", Description: \"%s\", Timestamp: %s"),
         *Tenant.ID,
         *Tenant.Title,
+        *Tenant.Description,
         *Tenant.Timestamp.ToString());
 }

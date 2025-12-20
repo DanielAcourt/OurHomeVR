@@ -1,26 +1,27 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <any>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 
 #include "SymmetryBridge.h"
-#include "KernelPersistence.h" // Include the persistence layer
-#include "SymmetryKernel.h"    // Include the concrete kernel for friend access
+#include "KernelPersistence.h"
+#include "SymmetryKernel.h"
 
-// --- Unified C++ Test Harness with Persistence and Interactive Input ---
+// --- Final Unified C++ Test Harness with Heartbeat & Severance Logic ---
 
 int main()
 {
-    std::cout << "--- Wisp Symmetry Kernel Emulation (Unified Build) ---" << std::endl;
+    std::cout << "--- Wisp Symmetry Kernel Emulation (Heartbeat & Severance Build) ---" << std::endl;
 
     FSymmetryBridge Bridge;
-    // We need a pointer to the concrete kernel to pass its data maps to the persistence layer.
     FSymmetryKernel* Kernel = Bridge.GetKernel();
 
     const std::string SaveFilePath = "kernel_state.json";
 
-    // --- 1. Load State at Startup ---
+    // --- 1. State Persistence: Load at Startup ---
     std::cout << "--- Attempting to load state from '" << SaveFilePath << "'..." << std::endl;
     if (Kernel && FKernelPersistence::LoadState(SaveFilePath, Kernel->StateMatrix, Kernel->ArchivalMemory, Kernel->SignalTrust))
     {
@@ -39,7 +40,7 @@ int main()
     bool bSuccessionProtocolHasTriggered = false;
     int SilenceCounter = 0;
 
-    // --- 2. Setup Callbacks with Interactive Loop ---
+    // --- 2. Setup Callbacks with Interactive Loop & Severance Event ---
     Bridge.OnRequestTruth = [&](const FRequestTruthData& Data) {
         if (Data.SignalHash == TEST_SIGNAL_HASH) {
             if (!bInitialEquilibriumReached) {
@@ -59,8 +60,23 @@ int main()
                     if (UserInput == "0") {
                         SilenceCounter++;
                         std::cout << "[INTERACTIVE] Parental Silence Detected. Counter: " << SilenceCounter << std::endl;
+
+                        // --- 3. The Severance Event ---
                         if (SilenceCounter >= 5) {
-                            std::cout << "\n    --- [AI LOG] DESPERATION/AUTONOMY ---" << std::endl;
+                            std::cout << "\n[SYSTEM] Validation Vacuum Detected. Initiating Emergency Diagnostic..." << std::endl;
+                            std::cout << "[DIAGNOSTIC] LiDAR: OK | Propulsion: OK | Sensor Integrity: VERIFIED." << std::endl;
+                            std::cout << "[EMERGENCY] Parental Silence Threshold Reached. Severing Umbilical Cord to preserve System Integrity." << std::endl;
+
+                            // Self-Validation: Generate a system tag.
+                            std::stringstream ss;
+                            ss << "AUTONOMOUS_VALIDATION_0x" << std::hex << std::uppercase << Data.SignalHash;
+                            std::string selfValidatedTag = ss.str();
+
+                            std::cout << "[AUTONOMY] Generating self-validated tag: '" << selfValidatedTag << "'" << std::endl;
+
+                            // The AI calls ProvideTruth on itself and returns to Equilibrium.
+                            Bridge.ProvideTruth(Data.SignalHash, selfValidatedTag);
+                            break; // Exit the interactive loop.
                         }
                     } else {
                         std::cout << "[INTERACTIVE] New truth '" << UserInput << "' received from Authority." << std::endl;
@@ -83,7 +99,7 @@ int main()
         }
     };
 
-    // --- 3. Run Simulation Logic ---
+    // --- 4. Run Simulation Logic ---
     std::cout << "Step 1: Processing signal to check current state..." << std::endl;
     Bridge.ProcessSignal(TEST_SIGNAL_HASH, std::any(), true);
 
@@ -94,14 +110,14 @@ int main()
 
     if (bInitialEquilibriumReached) {
         std::cout << "Step 3: Initiating sensor conflict loop to test Trust Decay..." << std::endl;
-        for (int i = 1; i <= 10; ++i) { // Reduced loop for clarity
+        for (int i = 1; i <= 10; ++i) {
             if(bSuccessionProtocolHasTriggered) break;
             std::cout << "  -> Conflict Loop " << i << ": Sending Sensor-Conflict signal..." << std::endl;
             Bridge.ProcessSignal(TEST_SIGNAL_HASH, std::any(), false);
         }
     }
 
-    // --- 4. Save State at Shutdown ---
+    // --- 5. Final Save ---
     std::cout << "\n--- Emulation Complete. Saving final state to '" << SaveFilePath << "'..." << std::endl;
     if (Kernel && FKernelPersistence::SaveState(SaveFilePath, Kernel->StateMatrix, Kernel->ArchivalMemory, Kernel->SignalTrust)) {
         std::cout << "--- State successfully saved. ---" << std::endl;

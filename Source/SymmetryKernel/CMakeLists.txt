@@ -1,21 +1,25 @@
-# Define the minimum version of CMake required to build this project.
+# Define the minimum version of CMake required
 cmake_minimum_required(VERSION 3.10)
 
-# Set the project name. This will be the name of the solution/project in Visual Studio.
-project(Wisp_Symmetry_Emulation)
+# Project Name: This is what will appear in IDEs (Visual Studio/Xcode)
+project(Wisp_Symmetry_Kernel)
 
-# Enforce the C++17 standard, which is required for std::any and other modern features.
+# Enforce C++17: Required for std::any, std::function, and modern memory management.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Add the 'Public' and 'Private' subdirectories to the include path.
-# This allows source files to find headers with simple #include "header.h" syntax.
-include_directories(Public Private)
+# Include Directories:
+include_directories(Public Private .)
 
-# Use a glob to automatically find all .cpp source files in the Private directory.
-# This will include SymmetryKernel.cpp and the new Main_Emulation.cpp.
+# Source Files:
 file(GLOB SOURCES "Private/*.cpp")
 
-# Define the executable target.
-# It will be named "Wisp_Symmetry_Emulation" and will be built from the source files found above.
+# The Executable:
 add_executable(Wisp_Symmetry_Emulation ${SOURCES})
+
+# Professional Touch: Display a message after configuration
+message(STATUS "----------------------------------------------------")
+message(STATUS "Wisp Symmetry Kernel: Acourt-Negru Reference Build")
+message(STATUS "Standard: C++17 | Target: Wisp_Symmetry_Emulation")
+message(STATUS "----------------------------------------------------")

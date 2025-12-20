@@ -6,10 +6,12 @@
 #include <string>
 #include <algorithm>
 
+// Forward-declare the persistence class.
+class FKernelPersistence;
+
 /**
  * @class FSymmetryKernel
  * @brief Concrete implementation of the ISymmetryKernel interface.
- * @note This header is private to the SymmetryKernel module.
  */
 class FSymmetryKernel : public ISymmetryKernel
 {
@@ -19,14 +21,14 @@ public:
 
     //~ Begin ISymmetryKernel Interface
     virtual void ProcessSignal(uint64_t InSignalHash, std::any InSignalData, bool bSensorConfirmation) override;
-
-    /**
-     * @brief Overrides the base interface, ensuring the signature matches exactly.
-     */
     virtual void ProvideTruth(uint64_t InSignalHash, const std::string& InSynthesizedTag) override;
-
     virtual void SetParentalAuthorityWeight(float InWeight) override;
     //~ End ISymmetryKernel Interface
+
+    // --- Persistence Interface ---
+
+    // Grant the persistence class access to the private state maps.
+    friend class FKernelPersistence;
 
 private:
     std::unordered_map<uint64_t, ESymmetryState> StateMatrix;

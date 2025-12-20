@@ -1,0 +1,1 @@
+This module implements a Symmetry Kernel for Embodied AGI, replacing static metadata with a recursive parental-basis handshake. It features a Succession Protocol that allows for sensor-driven trust decay and relative truth synthesis.

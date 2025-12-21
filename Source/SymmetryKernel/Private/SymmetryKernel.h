@@ -1,3 +1,4 @@
+// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
 #pragma once
 
 #include "ISymmetryKernel.h"

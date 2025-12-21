@@ -1,3 +1,4 @@
+# Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
 # Define the minimum version of CMake required
 cmake_minimum_required(VERSION 3.10)
 

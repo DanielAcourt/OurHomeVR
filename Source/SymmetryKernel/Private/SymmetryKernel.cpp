@@ -1,3 +1,4 @@
+// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
 #include "SymmetryKernel.h"
 #include <algorithm> // Explicitly include for std::min and std::max
 #include <iostream>  // For std::cout in the bridge implementation (if any)

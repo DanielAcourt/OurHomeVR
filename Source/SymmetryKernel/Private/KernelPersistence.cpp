@@ -1,3 +1,4 @@
+// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
 #include "KernelPersistence.h"
 #include "SymmetryBridge.h"
 #include "SymmetryKernel.h"

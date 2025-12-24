@@ -1,0 +1,24 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "SplinePlugin",
+  "Description": "A plugin for creating and managing splines.",
+  "Category": "Gameplay",
+  "CreatedBy": "Jules",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "SplinePlugin",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

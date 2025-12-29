@@ -6,6 +6,9 @@
 #include "DrawDebugHelpers.h"
 #include "Misc/Guid.h"
 #include "Hash/CityHash.h"
+#include "SaveableEntityComponent.h"
+#include "QiComponent.h"
+#include "GameplayTagContainer.h"
 
 void ABeeActor::InitializeIdentity(const FGuid& HiveID, int32 GenerationIndex, EBeeType BeeType)
 {
@@ -18,12 +21,20 @@ void ABeeActor::InitializeIdentity(const FGuid& HiveID, int32 GenerationIndex, E
     uint32* Hash2AsInts = reinterpret_cast<uint32*>(&Hash2);
     GeneticProfile.LineageID = FGuid(Hash1AsInts[0], Hash1AsInts[1], Hash2AsInts[0], Hash2AsInts[1]);
     GeneticProfile.GeneticSeed.Initialize(GeneticProfile.LineageID.A);
+
+    if (SaveableEntityComponent)
+    {
+        SaveableEntityComponent->InstanceID = GeneticProfile.LineageID;
+    }
 }
 
 ABeeActor::ABeeActor() {
     PrimaryActorTick.bCanEverTick = false;
     EpistemicState = 0b11;
     CurrentVelocity = FMath::VRand();
+
+    SaveableEntityComponent = CreateDefaultSubobject<USaveableEntityComponent>(TEXT("SaveableEntityComponent"));
+    QiComponent = CreateDefaultSubobject<UQiComponent>(TEXT("QiComponent"));
 }
 
 void ABeeActor::BeginPlay()
@@ -34,6 +45,24 @@ void ABeeActor::BeginPlay()
         MaxSpeed = GeneticProfile.GeneticSeed.FRandRange(400.0f, 600.0f);
         MaxSteeringForce = GeneticProfile.GeneticSeed.FRandRange(80.0f, 120.0f);
         QiCapacity = GeneticProfile.GeneticSeed.FRandRange(80.0f, 150.0f);
+
+        QiComponent->QiData.MaxQi = QiCapacity;
+        QiComponent->QiData.CurrentQi = QiCapacity;
+    }
+
+    if (SaveableEntityComponent)
+    {
+        SaveableEntityComponent->EntityTypeTag = FGameplayTag::RequestGameplayTag(FName("Animal.Insect.Bee"));
+    }
+}
+
+void ABeeActor::SynchronizeSymmetryWithComponents()
+{
+    if (QiComponent)
+    {
+        float QiPercentage = FMath::Max(0.0f, QiComponent->QiData.CurrentQi) / QiComponent->QiData.MaxQi;
+        float CurrentMaxSpeed = MaxSpeed * FMath::Clamp(QiPercentage, 0.1f, 1.0f);
+        CurrentVelocity = CurrentVelocity.GetClampedToMaxSize(CurrentMaxSpeed);
     }
 }
 
@@ -56,6 +85,8 @@ TArray<ABeeActor*> ABeeActor::GetNearbySisters()
 }
 
 void ABeeActor::UpdateBee(float DeltaTime, const FVector& GroupVelocity, const FVector& GroupCenter) {
+    SynchronizeSymmetryWithComponents();
+
     if (EpistemicState < 0b11 || !Manager) {
         EnterSuccessionState(DeltaTime);
         return;
@@ -100,7 +131,6 @@ void ABeeActor::UpdateBee(float DeltaTime, const FVector& GroupVelocity, const F
 
     FVector Steering = Acceleration.GetClampedToMaxSize(MaxSteeringForce);
     CurrentVelocity += Steering * DeltaTime;
-    CurrentVelocity = CurrentVelocity.GetClampedToMaxSize(MaxSpeed);
 
     SetActorLocation(GetActorLocation() + CurrentVelocity * DeltaTime);
     SetActorRotation(CurrentVelocity.Rotation());

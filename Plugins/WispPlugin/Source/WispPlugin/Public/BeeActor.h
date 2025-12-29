@@ -8,6 +8,8 @@
 #include "BeeActor.generated.h"
 
 class AHiveManager;
+class USaveableEntityComponent;
+class UQiComponent;
 
 UCLASS()
 class WISPPLUGIN_API ABeeActor : public AActor
@@ -25,6 +27,12 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    USaveableEntityComponent* SaveableEntityComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UQiComponent* QiComponent;
 
 public:
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
@@ -60,6 +68,7 @@ public:
     FVector GetCurrentVelocity() const { return CurrentVelocity; }
 
 private:
+    void SynchronizeSymmetryWithComponents();
     uint8 EpistemicState;
     FVector CurrentVelocity;
     bool ValidatePhysicalSymmetry(FVector TargetLocation);

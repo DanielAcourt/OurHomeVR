@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "InteractionComponent.generated.h"
 
+class UQiComponent;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class WISPPLUGIN_API UInteractionComponent : public UActorComponent
 {
@@ -17,6 +19,9 @@ public:
 	// This function is called by the Player Character when the interact key is pressed.
 	UFUNCTION(BlueprintCallable)
 	void Interact();
+
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	float TryAIInteract(AActor* Target, float RequestedAmount, const FGuid& LineageID);
 
 	// Change it to this:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")

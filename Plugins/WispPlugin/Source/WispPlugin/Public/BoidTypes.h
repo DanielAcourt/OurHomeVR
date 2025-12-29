@@ -26,6 +26,18 @@ enum class ETruthState : uint8
     Tangible    // 11
 };
 
+UENUM(BlueprintType)
+enum class EBeeState : uint8
+{
+    Idle,
+    Scouting,
+    MovingToTarget,
+    ReturningToHive,
+    Resting,
+    Interacting,
+    Dead
+};
+
 USTRUCT(BlueprintType)
 struct FBeeGeneticProfile
 {

@@ -1,5 +1,3 @@
-// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
-
 #include "HiveManager.h"
 #include "BeeActor.h"
 #include "Engine/World.h"
@@ -8,6 +6,8 @@
 #include "TimerManager.h"
 #include "ActorRegistry.h"
 #include "DrawDebugHelpers.h"
+#include "QiComponent.h"
+#include "GameplayTagAssetInterface.h"
 
 AHiveManager::AHiveManager() {
     PrimaryActorTick.bCanEverTick = true;
@@ -19,6 +19,8 @@ AHiveManager::AHiveManager() {
     HoneyCostMap.Add(EBeeType::Gatherer, 3.0f);
     HoneyCostMap.Add(EBeeType::Nursery, 2.0f);
     HoneyCostMap.Add(EBeeType::Drone, 5.0f);
+
+    FlowerTag = FGameplayTag::RequestGameplayTag(FName("Plant.Flower"));
 }
 
 void AHiveManager::BeginPlay()
@@ -31,7 +33,7 @@ void AHiveManager::BeginPlay()
     }
 
     GetWorld()->GetTimerManager().SetTimer(RegistryAuditTimer, this, &AHiveManager::RegistryAudit, 10.0f, true);
-    GetWorld()->GetTimerManager().SetTimer(TargetSearchTimer, this, &AHiveManager::SearchForNewTargets, 5.0f, true);
+    GetWorld()->GetTimerManager().SetTimer(TargetSearchTimer, this, &AHiveManager::SearchForNewTargets, 1.0f, true);
 }
 
 void AHiveManager::SearchForNewTargets()
@@ -46,13 +48,17 @@ void AHiveManager::SearchForNewTargets()
         if (Actor)
         {
             USaveableEntityComponent* SaveComponent = Actor->FindComponentByClass<USaveableEntityComponent>();
-            if (SaveComponent && SaveComponent->InstanceID.IsValid() && !DiscoveryRegistry.Contains(SaveComponent->InstanceID))
+            IGameplayTagAssetInterface* TaggedActor = Cast<IGameplayTagAssetInterface>(Actor);
+            if (SaveComponent && TaggedActor && SaveComponent->InstanceID.IsValid() && !DiscoveryRegistry.Contains(SaveComponent->InstanceID))
             {
-                if (SaveComponent->EntityTypeTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Plant.Flower"))))
+                FGameplayTagContainer ActorTags;
+                TaggedActor->GetOwnedGameplayTags(ActorTags);
+
+                if (ActorTags.HasTag(FlowerTag))
                 {
                     AvailableTargets.Enqueue(SaveComponent->InstanceID);
                 }
-                else if (ThreatTags.HasTag(SaveComponent->EntityTypeTag))
+                else if (ActorTags.HasAny(ThreatTags))
                 {
                     DiscoveryRegistry.Add(SaveComponent->InstanceID, ETruthState::Dissonance);
                 }
@@ -124,6 +130,14 @@ void AHiveManager::PromoteTargetIfScoutReturns(const FGuid& TargetID)
     PromoteToTangible(TargetID);
 }
 
+void AHiveManager::DemoteToUnknown(const FGuid& TargetID)
+{
+    if (DiscoveryRegistry.Contains(TargetID))
+    {
+        DiscoveryRegistry.Remove(TargetID);
+    }
+}
+
 // TODO: Add check for a "Dormant" state on the actor to fully comply with the user's directive.
 void AHiveManager::RegistryAudit()
 {
@@ -134,9 +148,18 @@ void AHiveManager::RegistryAudit()
     {
         if (It->Value == ETruthState::Tangible)
         {
-            if (!Registry->FindActor(It->Key))
+            AActor* Actor = Registry->FindActor(It->Key);
+            if (!Actor)
             {
                 It.RemoveCurrent();
+            }
+            else
+            {
+                UQiComponent* QiComponent = Actor->FindComponentByClass<UQiComponent>();
+                if (QiComponent && QiComponent->QiData.CurrentPollen <= 0)
+                {
+                    It.RemoveCurrent();
+                }
             }
         }
     }
@@ -172,10 +195,47 @@ void AHiveManager::UpdateMetabolism(float DeltaTime)
     }
 }
 
+void AHiveManager::UpdateSpatialGrid()
+{
+    SpatialGrid.Empty();
+    for (ABeeActor* Bee : ManagedSwarm)
+    {
+        if (Bee && Bee->BeeState != EBeeState::Resting && Bee->BeeState != EBeeState::Dead)
+        {
+            FIntVector Cell = FIntVector(Bee->GetActorLocation() / GridCellSize);
+            SpatialGrid.FindOrAdd(Cell).Add(Bee);
+        }
+    }
+}
+
+TArray<ABeeActor*> AHiveManager::GetNearbyBees(const FVector& Location, float Radius)
+{
+    TArray<ABeeActor*> NearbyBees;
+    FIntVector Cell = FIntVector(Location / GridCellSize);
+
+    for (int32 x = -1; x <= 1; ++x)
+    {
+        for (int32 y = -1; y <= 1; ++y)
+        {
+            for (int32 z = -1; z <= 1; ++z)
+            {
+                FIntVector CurrentCell = Cell + FIntVector(x, y, z);
+                if (TArray<ABeeActor*>* BeesInCell = SpatialGrid.Find(CurrentCell))
+                {
+                    NearbyBees.Append(*BeesInCell);
+                }
+            }
+        }
+    }
+    return NearbyBees;
+}
+
+
 void AHiveManager::Tick(float DeltaTime) {
     Super::Tick(DeltaTime);
 
     UpdateMetabolism(DeltaTime);
+    UpdateSpatialGrid();
 
     if (ManagedSwarm.Num() == 0)
     {
@@ -195,35 +255,62 @@ void AHiveManager::Tick(float DeltaTime) {
 FVector AHiveManager::CalculateAverageVelocity()
 {
 	FVector AverageVelocity = FVector::ZeroVector;
-	int32 SwarmSize = ManagedSwarm.Num();
-	if (SwarmSize == 0) return AverageVelocity;
-
+    int32 ActiveBees = 0;
 	for (const ABeeActor* Bee : ManagedSwarm)
 	{
-		if (Bee)
+		if (Bee && Bee->BeeState != EBeeState::Resting && Bee->BeeState != EBeeState::Dead)
 		{
 			AverageVelocity += Bee->GetCurrentVelocity();
+            ActiveBees++;
 		}
 	}
 
-	AverageVelocity /= SwarmSize;
+    if (ActiveBees > 0)
+    {
+	    AverageVelocity /= ActiveBees;
+    }
 	return AverageVelocity;
 }
 
 FVector AHiveManager::CalculateSwarmCenter()
 {
 	FVector SwarmCenter = FVector::ZeroVector;
-	int32 SwarmSize = ManagedSwarm.Num();
-	if (SwarmSize == 0) return SwarmCenter;
-
+    int32 ActiveBees = 0;
 	for (const ABeeActor* Bee : ManagedSwarm)
 	{
-		if (Bee)
+		if (Bee && Bee->BeeState != EBeeState::Resting && Bee->BeeState != EBeeState::Dead)
 		{
 			SwarmCenter += Bee->GetActorLocation();
+            ActiveBees++;
 		}
 	}
 
-	SwarmCenter /= SwarmSize;
+    if (ActiveBees > 0)
+    {
+	    SwarmCenter /= ActiveBees;
+    }
 	return SwarmCenter;
+}
+
+void AHiveManager::DepositPollen(float Amount)
+{
+    PollenStorage = FMath::Min(PollenStorage + Amount, MaxStorageCapacity);
+}
+
+void AHiveManager::UnregisterBee(ABeeActor* Bee)
+{
+    ManagedSwarm.Remove(Bee);
+}
+
+float AHiveManager::RequestHoney(float AmountRequested)
+{
+    if (HoneyReserves >= AmountRequested)
+    {
+        HoneyReserves -= AmountRequested;
+        return AmountRequested;
+    }
+
+    float HoneyToGive = HoneyReserves;
+    HoneyReserves = 0;
+    return HoneyToGive;
 }

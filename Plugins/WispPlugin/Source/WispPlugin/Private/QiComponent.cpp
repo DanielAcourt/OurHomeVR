@@ -1,13 +1,19 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "QiComponent.h"
 
 UQiComponent::UQiComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	QiData.CurrentQi = 1.0f;
 }
 
-void UQiComponent::BeginPlay()
+float UQiComponent::ConsumePollen(float AmountToTake)
 {
-	Super::BeginPlay();
+	float AmountTaken = FMath::Min(AmountToTake, QiData.CurrentPollen);
+	QiData.CurrentPollen -= AmountTaken;
+	return AmountTaken;
+}
+
+void UQiComponent::ConsumeQi(float AmountToConsume)
+{
+	QiData.CurrentQi = FMath::Max(0.0f, QiData.CurrentQi - AmountToConsume);
 }

@@ -90,3 +90,17 @@ void UInteractionComponent::Interact()
 	}
 }
 
+float UInteractionComponent::TryAIInteract(AActor* Target, float RequestedAmount, const FGuid& LineageID)
+{
+    if (!Target) return 0.0f;
+
+    UQiComponent* TargetQi = Target->FindComponentByClass<UQiComponent>();
+
+    if (TargetQi && TargetQi->QiData.CurrentPollen > 0) {
+        float Extracted = TargetQi->ConsumePollen(RequestedAmount);
+        UE_LOG(LogTemp, Log, TEXT("Bee %s extracted %f pollen from %s"), *LineageID.ToString(), Extracted, *Target->GetName());
+        return Extracted;
+    }
+
+    return 0.0f;
+}

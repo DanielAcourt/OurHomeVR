@@ -1,15 +1,15 @@
-// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "BoidTypes.h"
+#include "Engine/EngineTypes.h"
 #include "BeeActor.generated.h"
 
 class AHiveManager;
 class USaveableEntityComponent;
 class UQiComponent;
+class UInteractionComponent;
 
 UCLASS()
 class WISPPLUGIN_API ABeeActor : public AActor
@@ -35,7 +35,12 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UQiComponent* QiComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UInteractionComponent* InteractionComponent;
+
 public:
+    UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
+    float InteractionDistance = 150.0f;
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
     float CohesionWeight = 1.0f;
 
@@ -77,6 +82,15 @@ public:
 
     FGuid DiscoveredTargetID;
 
+    UPROPERTY(VisibleInstanceOnly, Category = "Wisp|Boids")
+    EBeeState BeeState = EBeeState::Idle;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Payload")
+    float MaxPayload;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Payload")
+    float CurrentPayload;
+
     FVector GetCurrentVelocity() const { return CurrentVelocity; }
 
 private:
@@ -84,10 +98,18 @@ private:
     FVector CalculateFlockingForces(const FVector& GroupVelocity, const FVector& GroupCenter);
     void UpdateMovement(const FVector& Steering, float DeltaTime);
 
+    void HandleIdleState();
+    void HandleScoutingState();
+    void HandleMovingToTargetState();
+    void HandleReturningToHiveState();
+    void HandleInteractingState();
+    void HandleRestingState();
+
     TArray<ABeeActor*> GetNearbySisters();
     void ApplyGeneticDNA();
     void SynchronizeSymmetryWithComponents();
     FVector CurrentVelocity;
     bool ValidatePhysicalSymmetry(FVector TargetLocation);
-    void EnterSuccessionState(float DeltaTime);
+    void EnterSuccessionState();
+    FTimerHandle StateTimer;
 };

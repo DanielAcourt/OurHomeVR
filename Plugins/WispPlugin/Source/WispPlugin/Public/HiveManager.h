@@ -1,5 +1,3 @@
-// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -32,8 +30,14 @@ public:
 
     bool RequestTarget(FGuid& OutTargetID);
     void PromoteTargetIfScoutReturns(const FGuid& TargetID);
+    void DemoteToUnknown(const FGuid& TargetID);
+    TArray<ABeeActor*> GetNearbyBees(const FVector& Location, float Radius);
 
     FGuid GetMyGuid() const { return HiveID; }
+
+    float RequestHoney(float AmountRequested);
+    void DepositPollen(float Amount);
+    void UnregisterBee(ABeeActor* Bee);
 
 protected:
     virtual void BeginPlay() override;
@@ -84,14 +88,23 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Wisp|Hive|Discovery")
     FGameplayTagContainer ThreatTags;
 
+    UPROPERTY(EditAnywhere, Category = "Wisp|Hive|Discovery")
+    FGameplayTag FlowerTag;
+
 private:
     FTimerHandle RegistryAuditTimer;
     FTimerHandle TargetSearchTimer;
     TQueue<FGuid> AvailableTargets;
     TMap<EBeeType, float> HoneyCostMap;
-	void UpdateMetabolism(float DeltaTime);
+    TMap<FIntVector, TArray<ABeeActor*>> SpatialGrid;
+
+    UPROPERTY(EditAnywhere, Category = "Wisp|Hive")
+    float GridCellSize = 1000.0f;
+
+    void UpdateMetabolism(float DeltaTime);
 	void RegistryAudit();
     void SearchForNewTargets();
+    void UpdateSpatialGrid();
 	FVector CalculateAverageVelocity();
 	FVector CalculateSwarmCenter();
 };

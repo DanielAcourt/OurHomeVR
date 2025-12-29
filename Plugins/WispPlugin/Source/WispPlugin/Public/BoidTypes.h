@@ -20,9 +20,10 @@ enum class EBeeType : uint8
 UENUM(BlueprintType)
 enum class ETruthState : uint8
 {
-    Unknown,
-    Probable, // State 10
-    Tangible  // State 11
+    Unknown,    // 00
+    Dissonance, // 01
+    Probable,   // 10
+    Tangible    // 11
 };
 
 USTRUCT(BlueprintType)

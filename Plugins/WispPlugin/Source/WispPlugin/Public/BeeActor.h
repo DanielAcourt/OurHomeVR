@@ -66,6 +66,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
     float BoundsWeight = 1.5f;
 
+    UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
+    float TargetWeight = 2.0f;
+
     UPROPERTY(VisibleInstanceOnly, Category = "Wisp|Boids")
     AHiveManager* Manager;
 
@@ -77,9 +80,13 @@ public:
     FVector GetCurrentVelocity() const { return CurrentVelocity; }
 
 private:
+    void FindNewTarget();
+    FVector CalculateFlockingForces(const FVector& GroupVelocity, const FVector& GroupCenter);
+    void UpdateMovement(const FVector& Steering, float DeltaTime);
+
+    TArray<ABeeActor*> GetNearbySisters();
     void ApplyGeneticDNA();
     void SynchronizeSymmetryWithComponents();
-    uint8 EpistemicState;
     FVector CurrentVelocity;
     bool ValidatePhysicalSymmetry(FVector TargetLocation);
     void EnterSuccessionState(float DeltaTime);

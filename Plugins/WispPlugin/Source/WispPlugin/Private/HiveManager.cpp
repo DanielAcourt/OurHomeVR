@@ -5,6 +5,9 @@
 #include "Engine/World.h"
 #include "BoidTypes.h"
 #include "SaveableEntityComponent.h"
+#include "TimerManager.h"
+#include "ActorRegistry.h"
+#include "DrawDebugHelpers.h"
 
 AHiveManager::AHiveManager() {
     PrimaryActorTick.bCanEverTick = true;
@@ -26,6 +29,41 @@ void AHiveManager::BeginPlay()
     {
         SaveableEntityComponent->InstanceID = HiveID;
     }
+
+    GetWorld()->GetTimerManager().SetTimer(RegistryAuditTimer, this, &AHiveManager::RegistryAudit, 10.0f, true);
+    GetWorld()->GetTimerManager().SetTimer(TargetSearchTimer, this, &AHiveManager::SearchForNewTargets, 5.0f, true);
+}
+
+void AHiveManager::SearchForNewTargets()
+{
+    TArray<FOverlapResult> Overlaps;
+    FCollisionShape Sphere = FCollisionShape::MakeSphere(SwarmBounds * 2.0f);
+    GetWorld()->OverlapMultiByChannel(Overlaps, GetActorLocation(), FQuat::Identity, ECC_WorldStatic, Sphere);
+
+    for (const FOverlapResult& Overlap : Overlaps)
+    {
+        AActor* Actor = Overlap.GetActor();
+        if (Actor)
+        {
+            USaveableEntityComponent* SaveComponent = Actor->FindComponentByClass<USaveableEntityComponent>();
+            if (SaveComponent && SaveComponent->InstanceID.IsValid() && !DiscoveryRegistry.Contains(SaveComponent->InstanceID))
+            {
+                if (SaveComponent->EntityTypeTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Plant.Flower"))))
+                {
+                    AvailableTargets.Enqueue(SaveComponent->InstanceID);
+                }
+                else if (ThreatTags.HasTag(SaveComponent->EntityTypeTag))
+                {
+                    DiscoveryRegistry.Add(SaveComponent->InstanceID, ETruthState::Dissonance);
+                }
+            }
+        }
+    }
+}
+
+bool AHiveManager::RequestTarget(FGuid& OutTargetID)
+{
+    return AvailableTargets.Dequeue(OutTargetID);
 }
 
 void AHiveManager::SpawnBees(EBeeType BeeType, int32 Count)
@@ -84,6 +122,24 @@ ETruthState AHiveManager::GetTruthState(const FGuid& TargetID) const
 void AHiveManager::PromoteTargetIfScoutReturns(const FGuid& TargetID)
 {
     PromoteToTangible(TargetID);
+}
+
+// TODO: Add check for a "Dormant" state on the actor to fully comply with the user's directive.
+void AHiveManager::RegistryAudit()
+{
+    UActorRegistry* Registry = GetGameInstance()->GetSubsystem<UActorRegistry>();
+    if (!Registry) return;
+
+    for (auto It = DiscoveryRegistry.CreateIterator(); It; ++It)
+    {
+        if (It->Value == ETruthState::Tangible)
+        {
+            if (!Registry->FindActor(It->Key))
+            {
+                It.RemoveCurrent();
+            }
+        }
+    }
 }
 
 void AHiveManager::UpdateMetabolism(float DeltaTime)

@@ -30,6 +30,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Wisp|Hive|Discovery")
     ETruthState GetTruthState(const FGuid& TargetID) const;
 
+    bool RequestTarget(FGuid& OutTargetID);
     void PromoteTargetIfScoutReturns(const FGuid& TargetID);
 
     FGuid GetMyGuid() const { return HiveID; }
@@ -80,9 +81,17 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Wisp|Hive|Discovery")
     TMap<FGuid, ETruthState> DiscoveryRegistry;
 
+    UPROPERTY(EditAnywhere, Category = "Wisp|Hive|Discovery")
+    FGameplayTagContainer ThreatTags;
+
 private:
+    FTimerHandle RegistryAuditTimer;
+    FTimerHandle TargetSearchTimer;
+    TQueue<FGuid> AvailableTargets;
     TMap<EBeeType, float> HoneyCostMap;
 	void UpdateMetabolism(float DeltaTime);
+	void RegistryAudit();
+    void SearchForNewTargets();
 	FVector CalculateAverageVelocity();
 	FVector CalculateSwarmCenter();
 };

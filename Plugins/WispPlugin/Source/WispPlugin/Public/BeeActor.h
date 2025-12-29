@@ -27,6 +27,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USaveableEntityComponent* SaveableEntityComponent;
@@ -67,6 +68,11 @@ public:
 
     UPROPERTY(VisibleInstanceOnly, Category = "Wisp|Boids")
     AHiveManager* Manager;
+
+    UPROPERTY(VisibleInstanceOnly, Category = "Wisp|Boids")
+    AActor* TargetActor;
+
+    FGuid DiscoveredTargetID;
 
     FVector GetCurrentVelocity() const { return CurrentVelocity; }
 

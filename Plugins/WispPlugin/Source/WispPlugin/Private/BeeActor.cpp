@@ -9,6 +9,8 @@
 #include "SaveableEntityComponent.h"
 #include "QiComponent.h"
 #include "GameplayTagContainer.h"
+#include "EngineUtils.h"
+#include "ActorRegistry.h"
 
 void ABeeActor::InitializeIdentity(const FGuid& HiveID, int32 GenerationIndex, EBeeType InBeeType)
 {
@@ -47,24 +49,42 @@ void ABeeActor::BeginPlay()
     {
         SaveableEntityComponent->EntityTypeTag = FGameplayTag::RequestGameplayTag(FName("Animal.Insect.Bee"));
     }
+
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        UActorRegistry* Registry = GameInstance->GetSubsystem<UActorRegistry>();
+        if (Registry)
+        {
+            Registry->RegisterActor(this);
+        }
+    }
+}
+
+void ABeeActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        UActorRegistry* Registry = GameInstance->GetSubsystem<UActorRegistry>();
+        if (Registry)
+        {
+            Registry->UnregisterActor(this);
+        }
+    }
 }
 
 void ABeeActor::ApplyGeneticDNA()
 {
     if (!GeneticProfile.GeneticSeed.IsInitialized()) return;
 
-    // Base stats that are common to all bees
     MaxSpeed = GeneticProfile.GeneticSeed.FRandRange(400.0f, 600.0f);
     MaxSteeringForce = GeneticProfile.GeneticSeed.FRandRange(80.0f, 120.0f);
-
-    float BaseQi = 0.0f;
-    float MaxQiRange = 0.0f;
+    float BaseQi = 100.0f;
+    float MaxQiRange = 50.0f;
 
     switch (GeneticProfile.BeeType)
     {
         case EBeeType::Worker:
-            BaseQi = 100.0f;
-            MaxQiRange = 50.0f;
             break;
         case EBeeType::Drone:
             BaseQi = 150.0f;
@@ -73,6 +93,18 @@ void ABeeActor::ApplyGeneticDNA()
         case EBeeType::Queen:
             BaseQi = 500.0f;
             MaxQiRange = 250.0f;
+            break;
+        case EBeeType::Scout:
+            MaxSpeed = GeneticProfile.GeneticSeed.FRandRange(800.0f, 1000.0f);
+            BaseQi = 1.0f;
+            MaxQiRange = 0.0f;
+            break;
+        case EBeeType::Gatherer:
+            MaxSpeed = GeneticProfile.GeneticSeed.FRandRange(200.0f, 300.0f);
+            BaseQi = 5.0f;
+            MaxQiRange = 0.0f;
+            break;
+        case EBeeType::Nursery:
             break;
     }
 
@@ -114,11 +146,76 @@ TArray<ABeeActor*> ABeeActor::GetNearbySisters()
 }
 
 void ABeeActor::UpdateBee(float DeltaTime, const FVector& GroupVelocity, const FVector& GroupCenter) {
+    if (GeneticProfile.BeeType == EBeeType::Nursery) return;
+
+    UActorRegistry* Registry = GetGameInstance()->GetSubsystem<UActorRegistry>();
+
+    if (!TargetActor)
+    {
+        if (GeneticProfile.BeeType == EBeeType::Scout)
+        {
+            if (Registry && Manager)
+            {
+                for(auto const& [Guid, Actor] : Registry->GetRegistryMap())
+                {
+                    if (Actor != this && Actor != Manager)
+                    {
+                         if (Manager->GetTruthState(Guid) == ETruthState::Unknown)
+                        {
+                            TargetActor = Actor;
+                            Manager->RegisterProbableTarget(Guid);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else if (GeneticProfile.BeeType == EBeeType::Gatherer)
+        {
+            if (Registry && Manager)
+            {
+                for (auto const& [Guid, State] : Manager->DiscoveryRegistry)
+                {
+                    if (State == ETruthState::Tangible)
+                    {
+                        TargetActor = Registry->FindActor(Guid);
+                        if (TargetActor) break;
+                    }
+                }
+            }
+        }
+    }
+
+    if(TargetActor && FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation()) < 100.0f)
+    {
+        if(GeneticProfile.BeeType == EBeeType::Scout && TargetActor != Manager)
+        {
+            USaveableEntityComponent* TargetSaveComponent = TargetActor->FindComponentByClass<USaveableEntityComponent>();
+            if(TargetSaveComponent)
+            {
+                DiscoveredTargetID = TargetSaveComponent->InstanceID;
+            }
+            TargetActor = Manager;
+        }
+        else if (TargetActor == Manager && DiscoveredTargetID.IsValid())
+        {
+            Manager->PromoteToTangible(DiscoveredTargetID);
+            DiscoveredTargetID.Invalidate();
+            TargetActor = nullptr;
+        }
+    }
+
     SynchronizeSymmetryWithComponents();
 
     if (EpistemicState < 0b11 || !Manager) {
         EnterSuccessionState(DeltaTime);
         return;
+    }
+
+    FVector TargetVector = FVector::ZeroVector;
+    if(TargetActor)
+    {
+        TargetVector = (TargetActor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
     }
 
     TArray<ABeeActor*> NearbySisters = GetNearbySisters();
@@ -157,6 +254,7 @@ void ABeeActor::UpdateBee(float DeltaTime, const FVector& GroupVelocity, const F
     Acceleration += AlignmentVector.GetSafeNormal() * AlignmentWeight;
     Acceleration += AvoidanceVector.GetSafeNormal() * AvoidanceWeight;
     Acceleration += BoundsVector.GetSafeNormal() * BoundsWeight;
+    Acceleration += TargetVector * 2.0f;
 
     FVector Steering = Acceleration.GetClampedToMaxSize(MaxSteeringForce);
     CurrentVelocity += Steering * DeltaTime;

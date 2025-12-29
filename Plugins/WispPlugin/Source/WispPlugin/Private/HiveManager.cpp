@@ -4,25 +4,44 @@
 #include "BeeActor.h"
 #include "Engine/World.h"
 #include "BoidTypes.h"
+#include "SaveableEntityComponent.h"
 
 AHiveManager::AHiveManager() {
     PrimaryActorTick.bCanEverTick = true;
     GenerationCounter = 0;
+
+    SaveableEntityComponent = CreateDefaultSubobject<USaveableEntityComponent>(TEXT("SaveableEntityComponent"));
+
+    HoneyCostMap.Add(EBeeType::Scout, 1.0f);
+    HoneyCostMap.Add(EBeeType::Gatherer, 3.0f);
+    HoneyCostMap.Add(EBeeType::Nursery, 2.0f);
+    HoneyCostMap.Add(EBeeType::Drone, 5.0f);
 }
 
 void AHiveManager::BeginPlay()
 {
     Super::BeginPlay();
     HiveID = FGuid::NewGuid();
+    if (SaveableEntityComponent)
+    {
+        SaveableEntityComponent->InstanceID = HiveID;
+    }
 }
 
-void AHiveManager::SpawnBees(int32 Count)
+void AHiveManager::SpawnBees(EBeeType BeeType, int32 Count)
 {
     if (!BeeActorTemplate) return;
 
     UWorld* World = GetWorld();
     if (!World) return;
 
+    float TotalCost = HoneyCostMap.FindRef(BeeType) * Count;
+    if (TotalCost > HoneyReserves)
+    {
+        return;
+    }
+
+    HoneyReserves -= TotalCost;
     GenerationCounter++;
 
     for (int32 i = 0; i < Count; ++i)
@@ -33,15 +52,74 @@ void AHiveManager::SpawnBees(int32 Count)
         ABeeActor* NewBee = World->SpawnActor<ABeeActor>(BeeActorTemplate, SpawnLocation, SpawnRotation);
         if (NewBee)
         {
-            NewBee->InitializeIdentity(HiveID, GenerationCounter, EBeeType::Worker);
+            NewBee->InitializeIdentity(HiveID, GenerationCounter, BeeType);
             NewBee->Manager = this;
             ManagedSwarm.Add(NewBee);
         }
     }
 }
 
+void AHiveManager::RegisterProbableTarget(const FGuid& TargetID)
+{
+    if (!DiscoveryRegistry.Contains(TargetID))
+    {
+        DiscoveryRegistry.Add(TargetID, ETruthState::Probable);
+    }
+}
+
+void AHiveManager::PromoteToTangible(const FGuid& TargetID)
+{
+    if (DiscoveryRegistry.Contains(TargetID))
+    {
+        DiscoveryRegistry[TargetID] = ETruthState::Tangible;
+    }
+}
+
+ETruthState AHiveManager::GetTruthState(const FGuid& TargetID) const
+{
+    const ETruthState* State = DiscoveryRegistry.Find(TargetID);
+    return State ? *State : ETruthState::Unknown;
+}
+
+void AHiveManager::PromoteTargetIfScoutReturns(const FGuid& TargetID)
+{
+    PromoteToTangible(TargetID);
+}
+
+void AHiveManager::UpdateMetabolism(float DeltaTime)
+{
+    int32 NurseryBeeCount = 0;
+    for (const ABeeActor* Bee : ManagedSwarm)
+    {
+        if (Bee && Bee->GeneticProfile.BeeType == EBeeType::Nursery)
+        {
+            NurseryBeeCount++;
+        }
+    }
+
+    if (PollenStorage > 0 && NurseryBeeCount > 0)
+    {
+        float ConversionAmount = FMath::Min(PollenStorage, PollenToHoneyConversionRate * NurseryBeeCount * DeltaTime);
+        if (HoneyReserves + ConversionAmount <= MaxStorageCapacity)
+        {
+            PollenStorage -= ConversionAmount;
+            HoneyReserves += ConversionAmount;
+        }
+    }
+
+    if (HoneyReserves > JellySynthesisThreshold)
+    {
+        float ExcessHoney = HoneyReserves - JellySynthesisThreshold;
+        float ConversionAmount = FMath::Min(ExcessHoney, HoneyToJellyConversionRate * DeltaTime);
+        HoneyReserves -= ConversionAmount;
+        JellyEssence += ConversionAmount;
+    }
+}
+
 void AHiveManager::Tick(float DeltaTime) {
     Super::Tick(DeltaTime);
+
+    UpdateMetabolism(DeltaTime);
 
     if (ManagedSwarm.Num() == 0)
     {

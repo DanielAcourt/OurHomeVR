@@ -11,7 +11,18 @@ enum class EBeeType : uint8
 {
     Worker,
     Queen,
-    Drone
+    Drone,
+    Scout,
+    Gatherer,
+    Nursery
+};
+
+UENUM(BlueprintType)
+enum class ETruthState : uint8
+{
+    Unknown,
+    Probable, // State 10
+    Tangible  // State 11
 };
 
 USTRUCT(BlueprintType)

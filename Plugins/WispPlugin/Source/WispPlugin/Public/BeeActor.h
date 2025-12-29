@@ -62,12 +62,16 @@ public:
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
     float AvoidanceDistance = 100.0f;
 
+    UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
+    float BoundsWeight = 1.5f;
+
     UPROPERTY(VisibleInstanceOnly, Category = "Wisp|Boids")
     AHiveManager* Manager;
 
     FVector GetCurrentVelocity() const { return CurrentVelocity; }
 
 private:
+    void ApplyGeneticDNA();
     void SynchronizeSymmetryWithComponents();
     uint8 EpistemicState;
     FVector CurrentVelocity;

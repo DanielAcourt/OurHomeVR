@@ -25,6 +25,9 @@ struct FBeeGeneticProfile
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Genetics")
     FGuid LineageID;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Genetics")
+    EBeeType BeeType = EBeeType::Worker;
+
     UPROPERTY()
     FRandomStream GeneticSeed;
 

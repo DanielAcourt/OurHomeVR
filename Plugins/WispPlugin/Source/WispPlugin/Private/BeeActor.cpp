@@ -10,11 +10,12 @@
 #include "QiComponent.h"
 #include "GameplayTagContainer.h"
 
-void ABeeActor::InitializeIdentity(const FGuid& HiveID, int32 GenerationIndex, EBeeType BeeType)
+void ABeeActor::InitializeIdentity(const FGuid& HiveID, int32 GenerationIndex, EBeeType InBeeType)
 {
     GeneticProfile.HomeHiveID = HiveID;
+    GeneticProfile.BeeType = InBeeType;
 
-    FString HashedString = FString::Printf(TEXT("%s-%d-%d"), *HiveID.ToString(), GenerationIndex, static_cast<int32>(BeeType));
+    FString HashedString = FString::Printf(TEXT("%s-%d-%d"), *HiveID.ToString(), GenerationIndex, static_cast<int32>(InBeeType));
     uint64 Hash1 = CityHash64(TCHAR_TO_ANSI(*HashedString), HashedString.Len());
     uint64 Hash2 = CityHash64(TCHAR_TO_ANSI(*HashedString), HashedString.Len()) + 1;
     uint32* Hash1AsInts = reinterpret_cast<uint32*>(&Hash1);
@@ -40,19 +41,47 @@ ABeeActor::ABeeActor() {
 void ABeeActor::BeginPlay()
 {
     Super::BeginPlay();
-    if (GeneticProfile.GeneticSeed.IsInitialized())
-    {
-        MaxSpeed = GeneticProfile.GeneticSeed.FRandRange(400.0f, 600.0f);
-        MaxSteeringForce = GeneticProfile.GeneticSeed.FRandRange(80.0f, 120.0f);
-        QiCapacity = GeneticProfile.GeneticSeed.FRandRange(80.0f, 150.0f);
-
-        QiComponent->QiData.MaxQi = QiCapacity;
-        QiComponent->QiData.CurrentQi = QiCapacity;
-    }
+    ApplyGeneticDNA();
 
     if (SaveableEntityComponent)
     {
         SaveableEntityComponent->EntityTypeTag = FGameplayTag::RequestGameplayTag(FName("Animal.Insect.Bee"));
+    }
+}
+
+void ABeeActor::ApplyGeneticDNA()
+{
+    if (!GeneticProfile.GeneticSeed.IsInitialized()) return;
+
+    // Base stats that are common to all bees
+    MaxSpeed = GeneticProfile.GeneticSeed.FRandRange(400.0f, 600.0f);
+    MaxSteeringForce = GeneticProfile.GeneticSeed.FRandRange(80.0f, 120.0f);
+
+    float BaseQi = 0.0f;
+    float MaxQiRange = 0.0f;
+
+    switch (GeneticProfile.BeeType)
+    {
+        case EBeeType::Worker:
+            BaseQi = 100.0f;
+            MaxQiRange = 50.0f;
+            break;
+        case EBeeType::Drone:
+            BaseQi = 150.0f;
+            MaxQiRange = 75.0f;
+            break;
+        case EBeeType::Queen:
+            BaseQi = 500.0f;
+            MaxQiRange = 250.0f;
+            break;
+    }
+
+    QiCapacity = GeneticProfile.GeneticSeed.FRandRange(BaseQi, BaseQi + MaxQiRange);
+
+    if (QiComponent)
+    {
+        QiComponent->QiData.MaxQi = QiCapacity;
+        QiComponent->QiData.CurrentQi = QiCapacity;
     }
 }
 
@@ -127,7 +156,7 @@ void ABeeActor::UpdateBee(float DeltaTime, const FVector& GroupVelocity, const F
     Acceleration += CohesionVector.GetSafeNormal() * CohesionWeight;
     Acceleration += AlignmentVector.GetSafeNormal() * AlignmentWeight;
     Acceleration += AvoidanceVector.GetSafeNormal() * AvoidanceWeight;
-    Acceleration += BoundsVector.GetSafeNormal() * 1.5f;
+    Acceleration += BoundsVector.GetSafeNormal() * BoundsWeight;
 
     FVector Steering = Acceleration.GetClampedToMaxSize(MaxSteeringForce);
     CurrentVelocity += Steering * DeltaTime;

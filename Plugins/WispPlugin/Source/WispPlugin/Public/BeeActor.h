@@ -4,20 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "BoidsActor.generated.h"
+#include "BoidTypes.h"
+#include "BeeActor.generated.h"
 
-class ABoidsManager;
+class AHiveManager;
 
 UCLASS()
-class WISPPLUGIN_API ABoidsActor : public AActor
+class WISPPLUGIN_API ABeeActor : public AActor
 {
     GENERATED_BODY()
 
 public:
-    ABoidsActor();
+    ABeeActor();
 
-    // The "Symmetry" update: Called by Manager, but validated by Kernel
-    void UpdateBoid(float DeltaTime, const FVector& GroupVelocity, const FVector& GroupCenter);
+    void UpdateBee(float DeltaTime, const FVector& GroupVelocity, const FVector& GroupCenter);
+    void InitializeIdentity(const FGuid& HiveID, int32 GenerationIndex, EBeeType BeeType);
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Genetics")
+    FBeeGeneticProfile GeneticProfile;
 
 protected:
     virtual void BeginPlay() override;
@@ -35,8 +39,14 @@ public:
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
     float PerceptionRadius = 1000.0f;
 
-    UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
+    UPROPERTY(VisibleAnywhere, Category = "Wisp|Boids")
     float MaxSpeed = 500.0f;
+
+    UPROPERTY(VisibleAnywhere, Category = "Wisp|Boids")
+    float MaxSteeringForce = 100.0f;
+
+    UPROPERTY(VisibleAnywhere, Category = "Wisp|Boids")
+    float QiCapacity = 100.0f;
 
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
     float AvoidanceWeight = 2.0f;
@@ -44,20 +54,14 @@ public:
     UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
     float AvoidanceDistance = 100.0f;
 
-    UPROPERTY(EditAnywhere, Category = "Wisp|Boids")
-    ABoidsManager* Manager;
+    UPROPERTY(VisibleInstanceOnly, Category = "Wisp|Boids")
+    AHiveManager* Manager;
 
     FVector GetCurrentVelocity() const { return CurrentVelocity; }
 
 private:
-    // 2-Bit State: 11 = Normal, 10 = Guessing, 01 = Noisy, 00 = Failed
     uint8 EpistemicState;
-
     FVector CurrentVelocity;
-
-    // The "Internal Truth" Check: Can I move here safely?
     bool ValidatePhysicalSymmetry(FVector TargetLocation);
-
-    // The Succession Event: What to do if the Manager stops ticking
     void EnterSuccessionState(float DeltaTime);
 };

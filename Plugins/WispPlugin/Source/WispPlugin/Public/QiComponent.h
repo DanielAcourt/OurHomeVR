@@ -1,13 +1,28 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "GardenData.h"
 #include "QiComponent.generated.h"
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+USTRUCT(BlueprintType)
+struct FQiData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Qi")
+    float CurrentQi;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Qi")
+    float MaxQi;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+    float CurrentPollen;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+    float MaxPollen;
+};
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class WISPPLUGIN_API UQiComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -15,9 +30,12 @@ class WISPPLUGIN_API UQiComponent : public UActorComponent
 public:
 	UQiComponent();
 
+	UFUNCTION(BlueprintCallable, Category = "Resources")
+	float ConsumePollen(float AmountToTake);
+
+	UFUNCTION(BlueprintCallable, Category = "Qi")
+	void ConsumeQi(float AmountToConsume);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Qi")
 	FQiData QiData;
-
-protected:
-	virtual void BeginPlay() override;
 };

@@ -1,0 +1,63 @@
+// Copyright (c) 2013-2025 Daniel Acourt. All Rights Reserved. Confidential & Proprietary.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Misc/Guid.h"
+#include "BoidTypes.generated.h"
+
+UENUM(BlueprintType)
+enum class EBeeType : uint8
+{
+    Worker,
+    Queen,
+    Drone,
+    Scout,
+    Gatherer,
+    Nursery
+};
+
+UENUM(BlueprintType)
+enum class ETruthState : uint8
+{
+    Unknown,    // 00
+    Dissonance, // 01
+    Probable,   // 10
+    Tangible    // 11
+};
+
+UENUM(BlueprintType)
+enum class EBeeState : uint8
+{
+    Idle,
+    Scouting,
+    MovingToTarget,
+    ReturningToHive,
+    Resting,
+    Interacting,
+    Dead
+};
+
+USTRUCT(BlueprintType)
+struct FBeeGeneticProfile
+{
+    GENERATED_BODY()
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Genetics")
+    FGuid HomeHiveID;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Genetics")
+    FGuid LineageID;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wisp|Genetics")
+    EBeeType BeeType = EBeeType::Worker;
+
+    UPROPERTY()
+    FRandomStream GeneticSeed;
+
+    FBeeGeneticProfile()
+    {
+        HomeHiveID.Invalidate();
+        LineageID.Invalidate();
+    }
+};

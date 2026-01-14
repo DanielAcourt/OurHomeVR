@@ -98,9 +98,15 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sovereign|PSTAS")
     FPSTAS_Scores PSTAS;
 
-    /** Recalculates all PSTAS scores based on the entity's current state. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sovereign|PSTAS")
+    EVerifiedSafetyStatus CurrentVSS;
+
+    /**
+     * Recalculates all PSTAS scores and the final VSS based on the entity's current state.
+     * This is an event-driven function and should not be called on Tick.
+     */
     UFUNCTION(BlueprintCallable, Category = "Sovereign|PSTAS")
-    void RecalculatePSTASScores();
+    void RefreshVerifiedStatus();
 
 protected:
     virtual void BeginPlay() override;

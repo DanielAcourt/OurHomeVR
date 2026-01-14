@@ -147,3 +147,23 @@ struct FPSTAS_Scores
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="PSTAS")
     float A_Score = 100.0f;
 };
+
+/**
+ * @enum EVerifiedSafetyStatus
+ * @brief Represents the final, mapped status of an entity's VSS score.
+ */
+UENUM(BlueprintType)
+enum class EVerifiedSafetyStatus : uint8
+{
+    /** VSS <= 0: The entity has critically failed in at least one dimension. Trust is zero. */
+    Critical UMETA(DisplayName = "Critical"),
+
+    /** 0 < VSS <= 35: The entity is in a dangerous state and likely to fail. */
+    Warning  UMETA(DisplayName = "Warning"),
+
+    /** 35 < VSS <= 70: The entity is underperforming and needs monitoring. */
+    Caution  UMETA(DisplayName = "Caution"),
+
+    /** VSS > 70: The entity is performing as expected. */
+    Nominal  UMETA(DisplayName = "Nominal")
+};

@@ -161,6 +161,9 @@ void USovereignSaveManager::LoadWorldState(const FString& SlotName, bool bAsJson
 
                 // Restore all other component and meta tag data
                 SaveComp->ApplyMetaTags(Data.UnknownMetaTags);
+
+                // Re-verify the entity's status after its state has been loaded.
+                SaveComp->RefreshVerifiedStatus();
             }
         }
     }

@@ -15,8 +15,8 @@ class USovereignSaveInterface : public UInterface
 
 /**
  * @class ISovereignSaveInterface
- * @brief The Law. This interface defines the contract for any object that wishes to be part of the Sovereign Save System.
- * It provides a standardized way to capture and restore an object's state.
+ * @brief The "Save Contract." Any UActorComponent that implements this interface will have its
+ * data automatically collected and saved by the USovereignSaveableEntityComponent.
  */
 class WISPCPP_API ISovereignSaveInterface
 {
@@ -24,14 +24,14 @@ class WISPCPP_API ISovereignSaveInterface
 
 public:
 	/**
-	 * Called when the Save Manager requests the object's data to be saved.
-	 * @return A TMap containing the object's state to be serialized.
+	 * Called by the Saveable Entity Component to request the component's data for serialization.
+	 * @return A TMap containing the component's state to be saved. Keys should be unique to this component.
 	 */
 	UFUNCTION(BlueprintNativeEvent, Category = "Sovereign Save System")
 	TMap<FName, FString> GetSaveData() const;
 
 	/**
-	 * Called when the Save Manager is loading data and needs this object to restore its state.
+	 * Called by the Saveable Entity Component when loading data, providing the saved state.
 	 * @param InData The TMap containing the state to restore.
 	 */
 	UFUNCTION(BlueprintNativeEvent, Category = "Sovereign Save System")

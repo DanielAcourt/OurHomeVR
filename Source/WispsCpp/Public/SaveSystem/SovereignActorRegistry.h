@@ -10,44 +10,59 @@ class AActor;
 
 /**
  * @class USovereignActorRegistry
- * @brief The King's Ledger. A centralized registry for all sovereign entities in the world.
- * This subsystem provides an O(1) lookup for actors using their FGuid-based EntityID.
- * It is the single source of truth for which actors are currently active and saveable.
+ * @brief The "Sovereign Live Registry" or "King's Ledger."
+ * Acting as a World Subsystem, this is the central hub for tracking every "Saveable" entity
+ * currently active. This avoids expensive 'GetAllActorsOfClass' calls during
+ * save/load cycles, ensuring high performance.
  */
 UCLASS()
 class WISPCPP_API USovereignActorRegistry : public UWorldSubsystem
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	/**
-	 * Registers an actor with the subsystem.
-	 * @param Actor The actor to register. Must not be null.
-	 * @param EntityID The unique identifier for the actor.
-	 */
-	void RegisterActor(AActor* Actor, const FGuid& EntityID);
-
-	/**
-	 * Unregisters an actor from the subsystem.
-	 * @param EntityID The unique identifier of the actor to unregister.
-	 */
-	void UnregisterActor(const FGuid& EntityID);
-
-	/**
-	 * Finds an actor by its unique identifier.
-	 * @param EntityID The unique identifier of the actor to find.
-	 * @return A pointer to the actor if found, otherwise nullptr.
-	 */
-	AActor* FindActor(const FGuid& EntityID) const;
+    /**
+     * Adds an actor to the live tracking system.
+     * @param EntityID The unique Passport ID (GUID) for the actor.
+     * @param Actor The actor to register. Called by a saveable entity in BeginPlay.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Sovereign|Registry")
+    void RegisterActor(FGuid EntityID, AActor* Actor);
 
     /**
-     * Gets the entire actor registry map.
-     * @return A const reference to the registry map.
+     * Removes an actor from tracking.
+     * @param EntityID The unique Passport ID of the actor to unregister. Called by a saveable entity in EndPlay.
      */
-    const TMap<FGuid, AActor*>& GetRegistry() const;
+    UFUNCTION(BlueprintCallable, Category = "Sovereign|Registry")
+    void UnregisterActor(FGuid EntityID);
+
+    /**
+     * Finds a specific actor using its unique Passport ID (GUID).
+     * @param EntityID The ID of the actor to find.
+     * @return The found actor, or nullptr if not found or invalid.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Sovereign|Registry")
+    AActor* FindActor(FGuid EntityID) const;
+
+    /**
+     * Gathers a list of all currently valid, tracked actors.
+     * @return An array of valid actor pointers.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Sovereign|Registry")
+    TArray<AActor*> GetTrackedActorsAsList() const;
+
+    /**
+     * Returns the complete, underlying registry map. Useful for the SaveManager loop.
+     * @return A const reference to the TMap of IDs to weak actor pointers.
+     */
+    const TMap<FGuid, TWeakObjectPtr<AActor>>& GetActiveRegistry() const { return TrackedActors; }
 
 private:
-	/** The main registry mapping EntityIDs to Actor pointers. */
-	UPROPERTY()
-	TMap<FGuid, AActor*> ActorRegistry;
+    /**
+     * The internal storage, mapping a Unique ID to a physical Actor in the world.
+     * Using TWeakObjectPtr prevents crashes if an Actor is destroyed
+     * without UnregisterActor being called, which is a critical safety feature.
+     */
+    UPROPERTY()
+    TMap<FGuid, TWeakObjectPtr<AActor>> TrackedActors;
 };

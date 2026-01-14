@@ -3,56 +3,57 @@
 #include "SaveSystem/SovereignActorRegistry.h"
 #include "GameFramework/Actor.h"
 
-void USovereignActorRegistry::RegisterActor(AActor* Actor, const FGuid& EntityID)
+void USovereignActorRegistry::RegisterActor(FGuid EntityID, AActor* Actor)
 {
-	if (!Actor)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USovereignActorRegistry::RegisterActor: Attempted to register a null actor."));
-		return;
-	}
+    if (EntityID.IsValid() && Actor)
+    {
+        // Safety Check: Ensure this ID isn't already registered to a DIFFERENT valid actor.
+        if (TrackedActors.Contains(EntityID) && TrackedActors[EntityID].IsValid() && TrackedActors[EntityID] != Actor)
+        {
+            UE_LOG(LogTemp, Error, TEXT("SovereignActorRegistry: ID COLLISION! Actor '%s' tried to take ID [%s] already held by '%s'."),
+                *Actor->GetName(), *EntityID.ToString(), *TrackedActors[EntityID]->GetName());
+            return;
+        }
 
-	if (!EntityID.IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USovereignActorRegistry::RegisterActor: Attempted to register actor '%s' with an invalid EntityID."), *Actor->GetName());
-		return;
-	}
-
-	if (ActorRegistry.Contains(EntityID))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USovereignActorRegistry::RegisterActor: EntityID '%s' is already registered. Overwriting actor '%s' with '%s'."), *EntityID.ToString(), *ActorRegistry[EntityID]->GetName(), *Actor->GetName());
-	}
-
-	ActorRegistry.Add(EntityID, Actor);
+        TrackedActors.Add(EntityID, Actor);
+        UE_LOG(LogTemp, Log, TEXT("SovereignActorRegistry: Registered %s with ID [%s]"), *Actor->GetName(), *EntityID.ToString());
+    }
 }
 
-void USovereignActorRegistry::UnregisterActor(const FGuid& EntityID)
+void USovereignActorRegistry::UnregisterActor(FGuid EntityID)
 {
-	if (!EntityID.IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USovereignActorRegistry::UnregisterActor: Attempted to unregister an invalid EntityID."));
-		return;
-	}
+    if (EntityID.IsValid() && TrackedActors.Contains(EntityID))
+    {
+        // Log the removal for debugging save cycles.
+        const FString ActorName = TrackedActors[EntityID].IsValid() ? TrackedActors[EntityID]->GetName() : TEXT("Invalid/Destroyed Actor");
+        TrackedActors.Remove(EntityID);
 
-	if (!ActorRegistry.Contains(EntityID))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USovereignActorRegistry::UnregisterActor: EntityID '%s' not found in registry."), *EntityID.ToString());
-		return;
-	}
-
-	ActorRegistry.Remove(EntityID);
+        UE_LOG(LogTemp, Warning, TEXT("SovereignActorRegistry: Unregistered Actor '%s'. ID [%s] has been vacated."), *ActorName, *EntityID.ToString());
+    }
 }
 
-AActor* USovereignActorRegistry::FindActor(const FGuid& EntityID) const
+AActor* USovereignActorRegistry::FindActor(FGuid EntityID) const
 {
-	if (!EntityID.IsValid())
-	{
-		return nullptr;
-	}
+    const TWeakObjectPtr<AActor>* FoundPtr = TrackedActors.Find(EntityID);
 
-	return ActorRegistry.FindRef(EntityID);
+    if (FoundPtr && FoundPtr->IsValid())
+    {
+        return FoundPtr->Get();
+    }
+    return nullptr;
 }
 
-const TMap<FGuid, AActor*>& USovereignActorRegistry::GetRegistry() const
+TArray<AActor*> USovereignActorRegistry::GetTrackedActorsAsList() const
 {
-    return ActorRegistry;
+    TArray<AActor*> OutList;
+    OutList.Reserve(TrackedActors.Num());
+
+    for (const auto& Pair : TrackedActors)
+    {
+        if (Pair.Value.IsValid())
+        {
+            OutList.Add(Pair.Value.Get());
+        }
+    }
+    return OutList;
 }
